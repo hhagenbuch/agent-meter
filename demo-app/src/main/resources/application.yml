@@ -1,0 +1,22 @@
+server:
+  port: 8085
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+
+meter:
+  gen-ai-system: anthropic
+  budgets:
+    # Small on purpose, so the load script trips it and the dashboard shows degrade.
+    - scope: feature:support-chat
+      limit-usd: 0.50
+      window: hourly
+      on-breach: degrade
+      degrade-to: claude-haiku-4-5
+    # A generous global warn line.
+    - scope: global
+      limit-usd: 100.00
+      window: daily
+      on-breach: warn
