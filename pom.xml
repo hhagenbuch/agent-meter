@@ -14,6 +14,7 @@
   <modules>
     <module>meter-core</module>
     <module>meter-spring</module>
+    <module>demo-app</module>
   </modules>
 
   <properties>

@@ -60,6 +60,22 @@ Built to instrument
 [spring-ai-agent-starter](https://github.com/hhagenbuch/spring-ai-agent-starter);
 budget enforcement rides the same `LlmClient` seam.
 
+## Demo
+
+A one-command observability stack in [`demo/`](demo/): OTLP → Collector → Prometheus +
+Tempo → Grafana, with a **shipped dashboard** (cost by feature, tokens by model, budget
+burn-down, exemplar → trace) and a `demo-app` that drives real agent-meter telemetry.
+
+```bash
+cd demo && docker compose up -d
+(cd .. && mvn -q -pl demo-app spring-boot:run)   # in another shell
+./load.sh                                        # watch support-chat trip its budget → degrade
+open http://localhost:3000
+```
+
+Click a cost spike and the metric **exemplar** takes you straight to the trace that caused
+it. (The hero screenshot is a manual capture — see [`demo/README.md`](demo/README.md).)
+
 ## Boundary
 
 - **[agent-blackbox](https://github.com/hhagenbuch/agent-blackbox)** answers *what
@@ -77,7 +93,8 @@ budget enforcement rides the same `LlmClient` seam.
       verified attribute-exact with `InMemorySpanExporter`; Spring auto-config
 - [x] Phase 3 — budget enforcement: warn / degrade / block decorator (budget outside meter),
       degrade proven end-to-end, recovers at window reset
-- [ ] Phase 4 — demo stack (Grafana dashboard, load script), README hero screenshot
+- [x] Phase 4 — [demo stack](demo/): compose (Collector/Prometheus/Tempo/Grafana),
+      shipped dashboard, `demo-app` + load script (GIF/screenshot is a manual capture)
 - [ ] Later — multi-instance budget store (Redis), gateway/proxy mode
 
 ## License
