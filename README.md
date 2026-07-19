@@ -30,8 +30,10 @@ below tracks progress.
   unknown models are recorded as *unknown*, never `0.00`; retries count (when your
   client reports each attempt — see Integration status), because you pay for them.
 - **Enforces budgets by degrading before denying.** Declarative budgets per
-  feature / session / global: `warn` → `degrade` to a cheaper model (span tagged
+  feature / session / global: `warn` → `degrade`* to a cheaper model (span tagged
   `agent.budget_degraded=true`) → `block` with a message a 2am on-call can act on.
+  <br><sub>*`degrade` needs a client that owns the request model — the provider-agnostic
+  seam; at the starter seam only `warn`/`block` apply (see [caveats](#add-the-dependency-get-cost-telemetry)).</sub>
 
   ```yaml
   meter:

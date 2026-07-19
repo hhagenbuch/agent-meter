@@ -1,0 +1,47 @@
+# End-to-end verification of the REAL instrumented agent (demo-agent), which can't be run
+# from the dev machine because its truststore blocks Anthropic over TLS. Manual trigger so
+# it only spends when you ask; skips cleanly if no ANTHROPIC_API_KEY secret is set.
+name: live-smoke
+on:
+  workflow_dispatch:
+
+jobs:
+  live-smoke:
+    runs-on: ubuntu-latest
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - name: Guard on the API key
+        id: guard
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "No ANTHROPIC_API_KEY secret set — skipping live smoke."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.skip != 'true'
+      - uses: actions/setup-java@v4
+        if: steps.guard.outputs.skip != 'true'
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build demo-agent
+        if: steps.guard.outputs.skip != 'true'
+        run: mvn -B -pl demo-agent -am -DskipTests package
+
+      - name: Boot the real agent and make one metered call
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          java -jar demo-agent/target/demo-agent-0.1.0-SNAPSHOT.jar > app.log 2>&1 &
+          APP_PID=$!
+          for i in $(seq 1 60); do curl -sf localhost:8086/actuator/health >/dev/null && break; sleep 2; done
+          resp=$(curl -s -X POST localhost:8086/api/chat \
+            -H 'content-type: application/json' -H 'X-Feature: smoke' -H 'X-Session-Id: ci' \
+            -d '{"sessionId":"ci","message":"Reply with the single word: ok"}')
+          echo "response: $resp"
+          kill "$APP_PID" 2>/dev/null || true
+          # Real end-to-end proof: a live model call returned real token usage on the response.
+          echo "$resp" | python3 -c "import sys,json; d=json.load(sys.stdin); u=d.get('usage') or {}; assert (u.get('inputTokens') or 0) > 0, 'no real usage: '+str(d); assert d.get('reply'), 'no reply: '+str(d); print('live smoke OK — usage:', u)"

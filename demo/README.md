@@ -24,6 +24,12 @@ docker compose --profile real up -d --build     # backends + the real agent (:80
 open http://localhost:3000
 ```
 
+**CI verification.** The real path can't be run from every dev machine (some truststores
+block Anthropic over TLS). The [`live-smoke`](../.github/workflows/live-smoke.yml) workflow
+— manual trigger, gated on an `ANTHROPIC_API_KEY` repo secret — boots `demo-agent` and
+asserts one real, metered chat returns real token usage. That's the clean way to prove the
+real mode end-to-end.
+
 ## Mode B — synthetic (no key)
 
 The `demo-app` drives agent-meter with a **fake provider** — the meter runs for real, but
