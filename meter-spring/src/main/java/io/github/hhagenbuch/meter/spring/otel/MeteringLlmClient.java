@@ -64,6 +64,9 @@ public final class MeteringLlmClient implements LlmClient {
             setIfPresent(span, MeterAttributes.SESSION_ID, request.sessionId());
             setIfPresent(span, MeterAttributes.TOOL, request.tool());
             setIfPresent(span, MeterAttributes.PROMPT_VERSION, request.promptVersion());
+            if (request.budgetDegraded()) {
+                span.setAttribute(MeterAttributes.BUDGET_DEGRADED, true);
+            }
 
             LlmResponse response = delegate.call(request);
 
