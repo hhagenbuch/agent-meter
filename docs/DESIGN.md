@@ -7,6 +7,15 @@ OpenTelemetry-native token/cost attribution and budget enforcement for LLM
 agents. This document is the contract for what gets built; code follows it in
 phases.
 
+> **Implementation status (be honest about the gap).** `meter-core` and
+> `meter-spring` are shipped: the cost engine, budgets, and the metering + enforcement
+> decorators over a **provider-agnostic `LlmClient` seam this project defines**. What is
+> *designed here but not yet shipped*: the drop-in `meter-starter` adapter (§7) that
+> auto-instruments `spring-ai-agent-starter`, and per-attempt HTTP capture via a
+> `WebClient` filter (§8). Until the adapter lands you implement the seam yourself, and
+> retry cost is aggregate unless your client reports each attempt. The demo drives a
+> *synthetic* provider, not a real agent.
+
 ## 1. Problem
 
 Teams shipped agents fast and are now holding an invoice they can't decompose.
