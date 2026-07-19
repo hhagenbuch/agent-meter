@@ -53,32 +53,45 @@ below tracks progress.
 | Module | Contents | Deps |
 |--------|----------|------|
 | `meter-core` | cost engine, versioned price table, budget policy — **pure** | Jackson, OTel API |
-| `meter-spring` | auto-config, `LlmClient` metering + budget decorators, `feature` propagation | Spring Boot, OTel SDK |
-| `demo/` | `docker-compose` OTel Collector → Prometheus + Tempo → Grafana, shipped dashboard, load script | — |
+| `meter-spring` | auto-config, provider-agnostic `LlmClient` metering + budget decorators | Spring Boot, OTel SDK |
+| `meter-starter` | drop-in auto-instrumentation for `spring-ai-agent-starter` (BeanPostProcessor) | meter-spring, the starter |
+| `demo/` | `docker-compose` (Collector → Prometheus + Tempo → Grafana), dashboard, real (`demo-agent`) + synthetic (`demo-app`) load | — |
 
-## Integration status (read this)
+## Add the dependency, get cost telemetry
 
-`meter-spring` instruments a **provider-agnostic `LlmClient` seam it defines** —
-`LlmResponse call(LlmRequest)`, where the response carries the token usage and the
-per-attempt breakdown. You wrap your client with
-`instrumentation.instrument(yourClient)` and get metering + budget enforcement.
+For a [spring-ai-agent-starter](https://github.com/hhagenbuch/spring-ai-agent-starter)
+app, that's now literal — add **`meter-starter`** and an `OpenTelemetry` bean, change no
+code:
 
-What that means honestly:
+```xml
+<repository><id>jitpack.io</id><url>https://jitpack.io</url></repository>
 
-- **There is no drop-in `spring-ai-agent-starter` adapter yet.** agent-meter does not
-  depend on the starter; you supply an implementation of its seam. A `meter-starter`
-  adapter module (with `BeanPostProcessor` auto-wiring) is the roadmap item that makes
-  "add the dependency, get cost telemetry" literally true — and it is now **unblocked**:
-  the starter [exposes token usage](https://github.com/hhagenbuch/spring-ai-agent-starter/pull/6)
-  on its responses as of that change (it was previously parsed and discarded, so there
-  was nothing to meter).
-- **Retry cost is aggregate unless your adapter reports per-attempt data.** The seam
-  accepts a list of `Attempt`s and sums their cost, so if your client surfaces each HTTP
-  attempt (the starter's retries happen *inside* its `AnthropicClient`), you get
-  per-attempt spans and true retry cost. If it only returns a final response, you get one
-  attempt's worth — correct, but not the retry-storm breakdown. Capturing attempts from a
-  client that retries internally needs a `WebClient` `ExchangeFilterFunction` at the HTTP
-  layer (roadmap, DESIGN §8).
+<dependency>
+  <groupId>io.github.hhagenbuch</groupId>
+  <artifactId>meter-starter</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+</dependency>
+```
+
+A `BeanPostProcessor` wraps the starter's `LlmClient` bean. Every chat call emits the
+`gen_ai.*`/`agent.*` span + metrics: **model** from `agent.model`, **usage/cost** from the
+starter's `LlmResponse.usage`, **session/feature** from the `X-Session-Id`/`X-Feature`
+request headers (a `WebFilter` lifts them into the Reactor context), **prompt_version**
+from `meter.prompt-version`. Budgets `warn` and `block` enforce here too.
+
+For any **other** client, `meter-spring` exposes a provider-agnostic seam
+(`instrumentation.instrument(yourClient)`) you adapt to directly.
+
+### Two honest caveats
+
+- **Retry cost is aggregate at the starter seam.** The starter retries *inside* its
+  `AnthropicClient`, so per-attempt cost isn't observable from a decorator; you get the
+  turn total (correct, not the retry-storm breakdown). Per-attempt capture needs a
+  `WebClient` `ExchangeFilterFunction` (roadmap, DESIGN §8).
+- **Budget `degrade` is not available at the starter seam.** `chat()` has no model
+  argument, so the adapter can `warn`/`block` but can't swap the model; `degrade` works
+  via the provider-agnostic seam, or would need an optional starter model-override
+  (DESIGN §7).
 
 ## Demo
 
@@ -86,11 +99,11 @@ A one-command observability stack in [`demo/`](demo/): OTLP → Collector → Pr
 Tempo → Grafana, with a **shipped dashboard** (cost by feature, tokens by model, budget
 burn-down, exemplar → trace).
 
-> **The demo is synthetic.** The `demo-app` drives agent-meter with a **fake provider**
-> (`FakeProvider` — plausible token counts, no real LLM). The *meter runs for real* — real
-> cost engine, real spans/metrics, real budget enforcement — but the token numbers are
-> generated, not from a live model. It exercises the library end-to-end; it is not a real
-> agent under load. (Wiring a real agent in is the `meter-starter` roadmap item above.)
+> **Two modes.** With `ANTHROPIC_API_KEY` set, `docker compose --profile real up` runs
+> `demo-agent` — the **real** starter, auto-instrumented by `meter-starter`, showing real
+> token/cost data. Without a key, `demo-app` drives a **synthetic** fake provider (the
+> meter runs for real; the token numbers are generated). Both are clearly labelled in
+> [`demo/README.md`](demo/README.md).
 
 ```bash
 cd demo && docker compose up -d
@@ -121,12 +134,12 @@ it. (The hero screenshot is a manual capture — see [`demo/README.md`](demo/REA
       degrade proven end-to-end, recovers at window reset
 - [x] Phase 4 — [demo stack](demo/): compose (Collector/Prometheus/Tempo/Grafana),
       shipped dashboard, `demo-app` + load script (GIF/screenshot is a manual capture)
-- [ ] `meter-starter` — a drop-in adapter for
+- [x] `meter-starter` — drop-in adapter for
       [spring-ai-agent-starter](https://github.com/hhagenbuch/spring-ai-agent-starter)
-      (`BeanPostProcessor` wiring), now unblocked by the starter exposing usage
+      (`BeanPostProcessor`, zero code changes); real agent wired into the demo (`demo-agent`)
 - [ ] Per-attempt retry capture via a `WebClient` `ExchangeFilterFunction` (DESIGN §8),
       so retry cost is broken out even when a client retries internally
-- [ ] Wire the real (adapter-instrumented) agent into the demo, replacing the synthetic provider
+- [ ] Budget `degrade` at the starter seam via an optional per-request model override (DESIGN §7)
 - [ ] Later — multi-instance budget store (Redis), gateway/proxy mode
 
 ## License

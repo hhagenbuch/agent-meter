@@ -7,14 +7,12 @@ OpenTelemetry-native token/cost attribution and budget enforcement for LLM
 agents. This document is the contract for what gets built; code follows it in
 phases.
 
-> **Implementation status (be honest about the gap).** `meter-core` and
-> `meter-spring` are shipped: the cost engine, budgets, and the metering + enforcement
-> decorators over a **provider-agnostic `LlmClient` seam this project defines**. What is
-> *designed here but not yet shipped*: the drop-in `meter-starter` adapter (§7) that
-> auto-instruments `spring-ai-agent-starter`, and per-attempt HTTP capture via a
-> `WebClient` filter (§8). Until the adapter lands you implement the seam yourself, and
-> retry cost is aggregate unless your client reports each attempt. The demo drives a
-> *synthetic* provider, not a real agent.
+> **Implementation status.** Shipped: `meter-core` (cost engine, budgets), `meter-spring`
+> (metering + enforcement over a provider-agnostic seam), and **`meter-starter`** — the
+> drop-in adapter that auto-instruments `spring-ai-agent-starter` with a `BeanPostProcessor`
+> and zero code changes (§10). The demo runs the real instrumented agent (`demo-agent`)
+> with a key, or a synthetic provider without one. Still roadmapped: per-attempt HTTP
+> capture via a `WebClient` filter (§8), and budget `degrade` at the starter seam (§7).
 
 ## 1. Problem
 
@@ -145,8 +143,31 @@ agent-blackbox. **agent-meter sits outermost.** Rationale:
 2. Cost is the outer envelope: the meter's turn span is the parent, and per-attempt
    spans (retries, §8) nest beneath it.
 
-Order: `ModelRouter/AnthropicClient` ← blackbox ← **meter** ← caller. Documented and
-asserted in a test so the answer to "meter outside or inside?" is not folklore.
+Order: `ModelRouter/AnthropicClient` ← blackbox ← **meter** ← caller. In `meter-starter`
+this is enforced by giving the metering `BeanPostProcessor` `Ordered.LOWEST_PRECEDENCE`, so
+it runs last and therefore wraps outermost — outside any recorder that also post-processes
+the client. (Cross-repo ordering with agent-blackbox is documented here rather than tested,
+since blackbox isn't a dependency.)
+
+### 7.1 The `meter-starter` adapter (drop-in)
+
+`meter-starter` auto-instruments a `spring-ai-agent-starter` app with no code changes: a
+`BeanPostProcessor` wraps the starter's `LlmClient` bean with a reactive metering decorator.
+Because `chat(messages, tools)` carries no model/session/feature, the adapter sources them
+as: **model** from `agent.model` config, **usage/cost** from the starter's `LlmResponse.usage`,
+**session/feature** from `X-Session-Id`/`X-Feature` headers a `WebFilter` lifts into the
+Reactor context (read via `Mono.deferContextual`), **prompt_version** from `meter.prompt-version`.
+
+### 7.2 Budget `degrade` decision at the starter seam
+
+`degrade` swaps the request model — but the starter's `chat()` has **no model argument**, so
+a decorator outside it cannot change the model. Decision: at the starter seam `meter-starter`
+enforces **`warn` and `block` only**; `degrade` is a no-op-to-`warn` there and is documented
+as such. Full `degrade` is available through the provider-agnostic `meter-spring` seam (which
+owns the request), or would need an **optional** `spring-ai-agent-starter` change: a
+per-request model override (e.g. a Reactor-context key `AnthropicClient` consults). That is a
+separate starter PR, deliberately not bundled here; until then, degrade-at-the-starter is
+facade-only and the docs say so.
 
 ## 8. Streaming and edge cases (designed in, not discovered late)
 
