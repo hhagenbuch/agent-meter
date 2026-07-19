@@ -34,7 +34,7 @@
     <jackson.version>2.18.2</jackson.version>
     <otel.version>1.45.0</otel.version>
     <!-- Aligned with spring-ai-agent-starter (Spring Boot 3.5.12, Java 25) to avoid classpath skew. -->
-    <springboot.version>3.5.12</springboot.version>
+    <springboot.version>4.1.0</springboot.version>
     <starter.version>v0.2.0</starter.version>
     <junit.version>5.11.4</junit.version>
     <assertj.version>3.26.3</assertj.version>
