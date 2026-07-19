@@ -33,6 +33,21 @@ below tracks progress.
   feature / session / global: `warn` → `degrade` to a cheaper model (span tagged
   `agent.budget_degraded=true`) → `block` with a message a 2am on-call can act on.
 
+  ```yaml
+  meter:
+    budgets:
+      - scope: feature:support-chat   # or session:*, or global
+        limit-usd: 5.00
+        window: daily                 # hourly | daily | monthly (calendar, UTC)
+        on-breach: degrade            # warn | degrade | block
+        degrade-to: claude-haiku-4-5  # cheaper model for the rest of the window
+  ```
+
+  Wrap your provider client once — `instrumentation.instrument(providerClient)` —
+  and you get metering + enforcement in the right order (budget outside meter, so
+  a degraded model is what the span records). A degraded scope recovers on its own
+  when the window rolls over.
+
 ## Modules
 
 | Module | Contents | Deps |
@@ -60,7 +75,8 @@ budget enforcement rides the same `LlmClient` seam.
 - [x] Phase 1 — `meter-core`: versioned price table + cost engine + budget policy (pure, Java 25)
 - [x] Phase 2 — `meter-spring`: OTel metering decorator (spans/metrics, retry child spans),
       verified attribute-exact with `InMemorySpanExporter`; Spring auto-config
-- [ ] Phase 3 — budget enforcement: warn / degrade / block decorators
+- [x] Phase 3 — budget enforcement: warn / degrade / block decorator (budget outside meter),
+      degrade proven end-to-end, recovers at window reset
 - [ ] Phase 4 — demo stack (Grafana dashboard, load script), README hero screenshot
 - [ ] Later — multi-instance budget store (Redis), gateway/proxy mode
 
