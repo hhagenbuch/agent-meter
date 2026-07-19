@@ -13,6 +13,7 @@
 
   <modules>
     <module>meter-core</module>
+    <module>meter-spring</module>
   </modules>
 
   <properties>
@@ -21,6 +22,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jackson.version>2.18.2</jackson.version>
     <otel.version>1.45.0</otel.version>
+    <springboot.version>3.3.5</springboot.version>
     <junit.version>5.11.4</junit.version>
     <assertj.version>3.26.3</assertj.version>
   </properties>
@@ -45,6 +47,14 @@
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
         <version>${junit.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Declared last so the explicit OTel/Jackson BOMs above win any version overlap. -->
+      <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-dependencies</artifactId>
+        <version>${springboot.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

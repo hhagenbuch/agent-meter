@@ -58,7 +58,8 @@ budget enforcement rides the same `LlmClient` seam.
 
 - [x] Phase 0 — design doc ([`docs/DESIGN.md`](docs/DESIGN.md))
 - [x] Phase 1 — `meter-core`: versioned price table + cost engine + budget policy (pure, Java 25)
-- [ ] Phase 2 — `meter-spring`: OTel spans/metrics per the attribution table
+- [x] Phase 2 — `meter-spring`: OTel metering decorator (spans/metrics, retry child spans),
+      verified attribute-exact with `InMemorySpanExporter`; Spring auto-config
 - [ ] Phase 3 — budget enforcement: warn / degrade / block decorators
 - [ ] Phase 4 — demo stack (Grafana dashboard, load script), README hero screenshot
 - [ ] Later — multi-instance budget store (Redis), gateway/proxy mode
