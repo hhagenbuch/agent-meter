@@ -34,6 +34,21 @@ services:
     ports:
       - "9090:9090"
 
+  # The REAL instrumented agent (spring-ai-agent-starter + meter-starter). Only starts
+  # with `docker compose --profile real up` AND an ANTHROPIC_API_KEY — then the dashboard
+  # shows real token/cost data. Without it, use the keyless synthetic demo-app (see README).
+  agent:
+    profiles: ["real"]
+    build:
+      context: ..
+      dockerfile: demo-agent/Dockerfile
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4317
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+    ports:
+      - "8086:8086"
+    depends_on: [otel-collector]
+
   grafana:
     image: grafana/grafana:11.3.1
     environment:

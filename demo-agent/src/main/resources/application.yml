@@ -1,0 +1,27 @@
+server:
+  port: 8086
+
+otel:
+  exporter:
+    otlp:
+      endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4317}
+
+# The real spring-ai-agent-starter config. Needs a key to actually call the model.
+agent:
+  api-key: ${ANTHROPIC_API_KEY:}
+  model: claude-sonnet-5
+
+# agent-meter: attribution + budgets. Set X-Session-Id / X-Feature request headers to
+# attribute a call to a session/feature.
+meter:
+  gen-ai-system: anthropic
+  prompt-version: ${AGENT_PROMPT_VERSION:v1}
+  budgets:
+    - scope: feature:support-chat
+      limit-usd: 1.00
+      window: hourly
+      on-breach: warn        # warn is non-disruptive for the demo; block also works (see tests)
+    - scope: global
+      limit-usd: 50.00
+      window: daily
+      on-breach: warn
