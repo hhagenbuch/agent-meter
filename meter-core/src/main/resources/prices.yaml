@@ -1,0 +1,30 @@
+# agent-meter bundled price table.
+#
+# EXAMPLE values — representative per-MTok rates in the shape of public vendor
+# pricing. VERIFY against the vendor's live pricing page before relying on them;
+# override this file via `meter.price-table.path` in a real deployment.
+# Retrieved (example): 2026-07-19
+generated_on: 2026-07-19
+source: "example values in the shape of public pricing pages; verify before use"
+
+models:
+  - model: claude-opus-4-8
+    rates:
+      - effective_from: 2026-01-01
+        input_per_mtok: 15.00
+        output_per_mtok: 75.00
+        cached_input_per_mtok: 1.50
+
+  - model: claude-sonnet-5
+    rates:
+      - effective_from: 2026-01-01
+        input_per_mtok: 3.00
+        output_per_mtok: 15.00
+        cached_input_per_mtok: 0.30
+
+  - model: claude-haiku-4-5
+    rates:
+      - effective_from: 2026-01-01
+        input_per_mtok: 0.80
+        output_per_mtok: 4.00
+        cached_input_per_mtok: 0.08

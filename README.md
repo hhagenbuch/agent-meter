@@ -1,5 +1,9 @@
 # agent-meter
 
+[![CI](https://github.com/hhagenbuch/agent-meter/actions/workflows/ci.yml/badge.svg)](https://github.com/hhagenbuch/agent-meter/actions)
+![Java 25](https://img.shields.io/badge/Java-25-blue)
+![OTel GenAI semconv](https://img.shields.io/badge/OpenTelemetry-GenAI%20semconv-blueviolet)
+
 > Every company that shipped agents last year is now staring at the invoice and
 > cannot answer the only question that matters: **which feature is spending
 > this?** `agent-meter` instruments your agent with OpenTelemetry — standard
@@ -52,8 +56,8 @@ budget enforcement rides the same `LlmClient` seam.
 
 ## Roadmap
 
-- [ ] Phase 0 — design doc ([`docs/DESIGN.md`](docs/DESIGN.md))
-- [ ] Phase 1 — `meter-core`: price table + cost engine + budget policy (pure)
+- [x] Phase 0 — design doc ([`docs/DESIGN.md`](docs/DESIGN.md))
+- [x] Phase 1 — `meter-core`: versioned price table + cost engine + budget policy (pure, Java 25)
 - [ ] Phase 2 — `meter-spring`: OTel spans/metrics per the attribution table
 - [ ] Phase 3 — budget enforcement: warn / degrade / block decorators
 - [ ] Phase 4 — demo stack (Grafana dashboard, load script), README hero screenshot
