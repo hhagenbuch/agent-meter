@@ -1,28 +1,40 @@
 # Demo stack
 
-`docker compose up` gives you the observability backends; the `demo-app` runs on the
-host, exports OTLP to the collector, and the load script drives it. Live dashboard in
-about a minute.
+`docker compose up` gives you the observability backends (Collector → Prometheus + Tempo
+→ Grafana). Two ways to feed them — a **real agent** or a **synthetic** generator:
 
 ```
-demo-app ──OTLP──> otel-collector ──> Prometheus (metrics)  ┐
-                                  └──> Tempo      (traces)   ├──> Grafana
-                                                             ┘
+[ real: demo-agent = starter + meter-starter ]  ──OTLP──┐
+[ synthetic: demo-app = fake provider        ]  ──OTLP──┤
+                                                        ▼
+                        otel-collector ──> Prometheus + Tempo ──> Grafana
 ```
 
-## Run it
+## Mode A — real instrumented agent (needs a key)
+
+The `demo-agent` module is the actual `spring-ai-agent-starter`, instrumented purely by
+adding the `meter-starter` dependency. With a key, the dashboard shows **real** token/cost
+data.
+
+```bash
+export ANTHROPIC_API_KEY=sk-ant-...
+cd demo
+docker compose --profile real up -d --build     # backends + the real agent (:8086)
+./load-agent.sh                                  # drives POST /api/chat with X-Feature/X-Session-Id
+open http://localhost:3000
+```
+
+## Mode B — synthetic (no key)
+
+The `demo-app` drives agent-meter with a **fake provider** — the meter runs for real, but
+the token numbers are generated. Good for seeing the dashboard without a key or a bill.
 
 ```bash
 cd demo
-docker compose up -d                         # collector + prometheus + tempo + grafana
-
-# in another shell, from the repo root:
-mvn -q -pl demo-app spring-boot:run          # exports OTLP to localhost:4317, serves :8085
-
-# back in demo/:
-./load.sh                                    # ~2 min of mixed traffic
-
-open http://localhost:3000                   # anonymous admin; "agent-meter" dashboard
+docker compose up -d                         # backends only
+mvn -q -pl demo-app spring-boot:run          # from the repo root, in another shell (:8085)
+./load.sh                                     # ~2 min of synthetic traffic
+open http://localhost:3000
 ```
 
 The dashboard shows **cost by feature**, **tokens by model**, **budget enforcements**

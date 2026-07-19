@@ -14,8 +14,18 @@
   <modules>
     <module>meter-core</module>
     <module>meter-spring</module>
+    <module>meter-starter</module>
     <module>demo-app</module>
+    <module>demo-agent</module>
   </modules>
+
+  <repositories>
+    <!-- spring-ai-agent-starter is consumed as a library from JitPack. -->
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
 
   <properties>
     <maven.compiler.release>25</maven.compiler.release>
@@ -23,7 +33,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jackson.version>2.18.2</jackson.version>
     <otel.version>1.45.0</otel.version>
-    <springboot.version>3.3.5</springboot.version>
+    <!-- Aligned with spring-ai-agent-starter (Spring Boot 3.5.12, Java 25) to avoid classpath skew. -->
+    <springboot.version>3.5.12</springboot.version>
+    <starter.version>v0.2.0</starter.version>
     <junit.version>5.11.4</junit.version>
     <assertj.version>3.26.3</assertj.version>
   </properties>

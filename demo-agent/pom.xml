@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>io.github.hhagenbuch</groupId>
+    <artifactId>agent-meter-parent</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>demo-agent</artifactId>
+  <name>demo-agent</name>
+  <description>The REAL spring-ai-agent-starter, auto-instrumented by meter-starter and exporting OTLP</description>
+
+  <dependencies>
+    <!-- The real agent, as a library — brings AgentLoop, AnthropicClient, ChatController, WebFlux. -->
+    <dependency>
+      <groupId>com.github.hhagenbuch</groupId>
+      <artifactId>spring-ai-agent-starter</artifactId>
+      <version>${starter.version}</version>
+    </dependency>
+    <!-- Add the dependency, get cost telemetry — this is the whole point. -->
+    <dependency>
+      <groupId>io.github.hhagenbuch</groupId>
+      <artifactId>meter-starter</artifactId>
+      <version>0.1.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-sdk</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${springboot.version}</version>
+        <configuration>
+          <mainClass>io.github.hhagenbuch.meter.demoagent.DemoAgentApplication</mainClass>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

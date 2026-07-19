@@ -24,6 +24,10 @@ public class MeterProperties {
     /** {@code gen_ai.system} value for spans (e.g. anthropic, openai). */
     private String genAiSystem = "anthropic";
 
+    /** {@code agent.prompt_version} for spans/metrics; typically {@code ${AGENT_PROMPT_VERSION:}}
+     *  (agent-operator sets this label on deployments). Null when unset. */
+    private String promptVersion;
+
     /** Declarative budgets, enforced by degrading before denying. */
     private List<BudgetSpec> budgets = new ArrayList<>();
 
@@ -49,6 +53,14 @@ public class MeterProperties {
 
     public void setGenAiSystem(String genAiSystem) {
         this.genAiSystem = genAiSystem;
+    }
+
+    public String getPromptVersion() {
+        return promptVersion;
+    }
+
+    public void setPromptVersion(String promptVersion) {
+        this.promptVersion = promptVersion;
     }
 
     public List<BudgetSpec> getBudgets() {
