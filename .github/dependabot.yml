@@ -18,8 +18,14 @@ updates:
         patterns: ["org.apache.maven.plugins:*"]
       test-libs:
         patterns: ["org.junit*", "org.assertj:*", "org.mockito:*"]
+      # The OpenTelemetry artifacts are all-or-nothing: the API, SDK, BOM and
+      # exporters are version-locked, and a split bump yields a classpath where
+      # the SDK and API disagree. Keep the family in one PR — same reasoning that
+      # made a half-bumped fabric8 a bug in agent-operator.
+      opentelemetry:
+        patterns: ["io.opentelemetry:*", "io.opentelemetry.*:*"]
       runtime-libs:
-        patterns: ["com.fasterxml.jackson*", "tools.jackson*", "io.opentelemetry:*", "org.springframework*"]
+        patterns: ["com.fasterxml.jackson*", "tools.jackson*", "org.springframework*"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
