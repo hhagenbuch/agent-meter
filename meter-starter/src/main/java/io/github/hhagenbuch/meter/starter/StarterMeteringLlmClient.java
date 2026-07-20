@@ -1,6 +1,6 @@
 package io.github.hhagenbuch.meter.starter;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import io.github.hhagenbuch.agent.llm.LlmClient;
 import io.github.hhagenbuch.agent.llm.LlmResponse;
 import io.github.hhagenbuch.agent.tools.AgentTool;

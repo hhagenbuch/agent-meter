@@ -1,10 +1,9 @@
 package io.github.hhagenbuch.meter.core.pricing;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.PropertyNamingStrategies;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,10 +21,12 @@ public final class PriceTableLoader {
     /** The bundled table shipped on the classpath. */
     public static final String BUNDLED_RESOURCE = "/prices.yaml";
 
-    private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory())
-            .registerModule(new JavaTimeModule())
-            .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    // Jackson 3 mappers are immutable and configured through a builder; java.time support
+    // is built into databind, so the old JavaTimeModule registration is no longer needed.
+    private static final ObjectMapper YAML = YAMLMapper.builder()
+            .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .build();
 
     private PriceTableLoader() {
     }
