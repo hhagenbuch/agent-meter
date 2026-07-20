@@ -43,7 +43,7 @@
       "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
       "options": { "legend": { "displayMode": "table", "placement": "right", "calcs": ["sum"] } },
       "targets": [
-        { "refId": "A", "expr": "sum by (gen_ai_response_model, direction) (rate(agent_tokens_total[1m]) * 60)", "legendFormat": "{{gen_ai_response_model}} {{direction}}" }
+        { "refId": "A", "expr": "sum by (gen_ai_response_model, gen_ai_token_type) (rate(gen_ai_client_token_usage_sum[1m]) * 60)", "legendFormat": "{{gen_ai_response_model}} {{gen_ai_token_type}}" }
       ]
     },
     {
@@ -61,13 +61,13 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "Turn duration p95 (ms)",
+      "title": "Operation duration p95 (s)",
       "gridPos": { "h": 7, "w": 12, "x": 0, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
       "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
       "targets": [
-        { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(agent_turn_duration_milliseconds_bucket[5m])))", "legendFormat": "p95" }
+        { "refId": "A", "expr": "histogram_quantile(0.95, sum by (le) (rate(gen_ai_client_operation_duration_seconds_bucket[5m])))", "legendFormat": "p95" }
       ]
     },
     {
