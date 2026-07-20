@@ -15,9 +15,29 @@
 **Cost is a reliability dimension.** You'd never ship a service without latency
 metrics; agents ship without cost metrics every day.
 
-**Status: Phase 0 — design.** This repo currently contains the design only. See
-[`docs/DESIGN.md`](docs/DESIGN.md) for the RFC. Code lands in phases; the roadmap
-below tracks progress.
+**Status: MVP complete (Phases 0–4 + `meter-starter`).** Cost engine + versioned
+price table, provider-agnostic OTel metering (attribute-exact), budget
+enforcement (warn → degrade → block), a one-command Grafana demo stack, and a
+drop-in `meter-starter` adapter that instruments a
+[spring-ai-agent-starter](https://github.com/hhagenbuch/spring-ai-agent-starter)
+app with zero code changes — all built. Design/RFC:
+[`docs/DESIGN.md`](docs/DESIGN.md); the roadmap below tracks what remains.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    H[X-Session-Id · X-Feature<br/>request headers] --> WF[MeterContextWebFilter]
+    WF --> MC[MeterContext<br/>Reactor context]
+    LC[LlmClient.chat] --> MD[metering decorator<br/>StarterMeteringLlmClient]
+    MC -. attribution .-> MD
+    MD --> CE[CostEngine + PriceTable<br/>versioned prices.yaml]
+    MD --> BL[BudgetLedger<br/>warn → degrade* → block]
+    MD --> OT[OTel spans + metrics<br/>gen_ai.* / agent.*]
+    OT --> COL[Collector] --> PT[Prometheus + Tempo] --> GR[Grafana dashboard]
+```
+
+<sub>*`degrade` needs the provider-agnostic seam that owns the request model; at the starter seam only `warn`/`block` apply — see caveats below.</sub>
 
 ## What it does
 
