@@ -31,7 +31,7 @@
     <maven.compiler.release>25</maven.compiler.release>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <otel.version>1.45.0</otel.version>
+    <otel.version>1.64.0</otel.version>
     <!-- Aligned with spring-ai-agent-starter (Spring Boot 4.1.0 / Jackson 3, Java 25) to avoid classpath skew. -->
     <springboot.version>4.1.0</springboot.version>
     <starter.version>v0.3.0</starter.version>
