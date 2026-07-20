@@ -1,6 +1,6 @@
 # Build context is the repo root (the reactor build needs the sibling meter-* modules).
 # Note: not Docker-built in this dev environment; standard multi-stage Spring Boot image.
-FROM maven:3.9-eclipse-temurin-25 AS build
+FROM maven:3-eclipse-temurin-26 AS build
 WORKDIR /src
 COPY . .
 RUN mvn -q -pl demo-agent -am -DskipTests package
