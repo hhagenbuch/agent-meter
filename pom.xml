@@ -31,24 +31,16 @@
     <maven.compiler.release>25</maven.compiler.release>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jackson.version>2.21.5</jackson.version>
     <otel.version>1.45.0</otel.version>
-    <!-- Aligned with spring-ai-agent-starter (Spring Boot 3.5.12, Java 25) to avoid classpath skew. -->
-    <springboot.version>3.5.12</springboot.version>
-    <starter.version>v0.2.0</starter.version>
+    <!-- Aligned with spring-ai-agent-starter (Spring Boot 4.1.0 / Jackson 3, Java 25) to avoid classpath skew. -->
+    <springboot.version>4.1.0</springboot.version>
+    <starter.version>v0.3.0</starter.version>
     <junit.version>5.10.3</junit.version>
     <assertj.version>3.26.3</assertj.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>com.fasterxml.jackson</groupId>
-        <artifactId>jackson-bom</artifactId>
-        <version>${jackson.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
       <dependency>
         <groupId>io.opentelemetry</groupId>
         <artifactId>opentelemetry-bom</artifactId>
@@ -63,7 +55,7 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <!-- Declared last so the explicit OTel/Jackson BOMs above win any version overlap. -->
+      <!-- Declared last so the explicit OTel BOM above wins any version overlap. Jackson 3 is managed by the Spring Boot 4 BOM. -->
       <dependency>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>

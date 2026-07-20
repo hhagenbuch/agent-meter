@@ -37,7 +37,7 @@ jobs:
         run: |
           java -jar demo-agent/target/demo-agent-0.1.0-SNAPSHOT.jar > app.log 2>&1 &
           APP_PID=$!
-          for i in $(seq 1 60); do curl -sf localhost:8086/actuator/health >/dev/null && break; sleep 2; done
+          for _ in $(seq 1 60); do curl -sf localhost:8086/actuator/health >/dev/null && break; sleep 2; done
           resp=$(curl -s -X POST localhost:8086/api/chat \
             -H 'content-type: application/json' -H 'X-Feature: smoke' -H 'X-Session-Id: ci' \
             -d '{"sessionId":"ci","message":"Reply with the single word: ok"}')
