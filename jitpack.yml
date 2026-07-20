@@ -1,0 +1,7 @@
+# JitPack builds this repo when a consumer resolves com.github.hhagenbuch.agent-meter:*.
+# Pin JDK 25 (the project targets release 25) and use the Maven Wrapper, because
+# JitPack's default Maven is too old for maven-compiler-plugin 3.13.
+jdk:
+  - openjdk25
+install:
+  - ./mvnw install -DskipTests

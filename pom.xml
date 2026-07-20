@@ -31,12 +31,12 @@
     <maven.compiler.release>25</maven.compiler.release>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jackson.version>2.18.2</jackson.version>
+    <jackson.version>2.21.5</jackson.version>
     <otel.version>1.45.0</otel.version>
     <!-- Aligned with spring-ai-agent-starter (Spring Boot 3.5.12, Java 25) to avoid classpath skew. -->
     <springboot.version>3.5.12</springboot.version>
     <starter.version>v0.2.0</starter.version>
-    <junit.version>5.11.4</junit.version>
+    <junit.version>5.10.3</junit.version>
     <assertj.version>3.26.3</assertj.version>
   </properties>
 
