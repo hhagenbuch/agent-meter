@@ -13,3 +13,8 @@ updates:
     schedule:
       interval: "weekly"
     labels: ["dependencies"]
+  - package-ecosystem: "docker"
+    directory: "/demo-agent"
+    schedule:
+      interval: "weekly"
+    labels: ["dependencies"]

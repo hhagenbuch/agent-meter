@@ -107,11 +107,14 @@ code:
 <repository><id>jitpack.io</id><url>https://jitpack.io</url></repository>
 
 <dependency>
-  <groupId>io.github.hhagenbuch</groupId>
+  <groupId>com.github.hhagenbuch.agent-meter</groupId>
   <artifactId>meter-starter</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>v0.1.1</version>
 </dependency>
 ```
+
+<sub>JitPack coordinates for a multi-module repo are
+`com.github.{user}.{repo}:{module}:{tag}` — not the project's own `groupId`.</sub>
 
 A `BeanPostProcessor` wraps the starter's `LlmClient` bean. Every chat call emits the
 `gen_ai.*`/`agent.*` span + metrics: **model** from `agent.model`, **usage/cost** from the
@@ -121,6 +124,20 @@ from `meter.prompt-version`. Budgets `warn` and `block` enforce here too.
 
 For any **other** client, `meter-spring` exposes a provider-agnostic seam
 (`instrumentation.instrument(yourClient)`) you adapt to directly.
+
+### Using with agent-blackbox
+
+Both projects decorate the same `LlmClient` bean via a `BeanPostProcessor`, so the wrapping
+order is a real contract, not an accident:
+
+- **agent-meter**'s `LlmClientMeteringBeanPostProcessor` is `Ordered.LOWEST_PRECEDENCE` — it
+  applies **last**, so it wraps **outermost**.
+- **[agent-blackbox](https://github.com/hhagenbuch/agent-blackbox)**'s
+  `RecordingBeanPostProcessor` is order `0`, so it applies first and sits **inside**.
+
+That ordering is the one you want: metering measures the *whole* call (including anything
+the recorder does), and the recorder captures the actual request/response as the delegate
+sees it. Both can be enabled together with no configuration.
 
 ### Two honest caveats
 
