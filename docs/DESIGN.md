@@ -46,18 +46,34 @@ treats cost as a first-class signal on the same telemetry rails as everything el
 We use the OpenTelemetry **GenAI semantic conventions** rather than inventing a
 format, so the data works in any OTel backend and interops with other GenAI
 instrumentation. GenAI semconv is currently **Development** stability (still
-evolving); we **pin the version we target and record it here**, revisiting each
-semconv release.
+evolving); we **pin the exact commit we audited against and record it here**,
+revisiting each semconv release.
 
-- **Target semconv version:** 1.30.x (GenAI group), Development stability.
-  <https://opentelemetry.io/docs/specs/semconv/gen-ai/>
-- **Standard attributes we emit:** `gen_ai.system`, `gen_ai.operation.name`,
-  `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.usage.input_tokens`,
-  `gen_ai.usage.output_tokens`.
-- **Our namespaced additions** (things the spec doesn't cover — cost and the FinOps
-  attribution units) live under `agent.*` so they never collide with standard keys:
-  `agent.session_id`, `agent.tool`, `agent.prompt_version`, `agent.feature`,
-  `agent.cost_usd`, `agent.cost_estimated`, `agent.budget_degraded`, `agent.incomplete`.
+- **Audited against:** `open-telemetry/semantic-conventions-genai` @
+  `c26a2c21d1ee70d5231bd440c7b48d3c94ee506a` (2026-07-17), Development stability.
+  <https://github.com/open-telemetry/semantic-conventions-genai>
+
+### Standards alignment
+
+Where the convention ratifies a name, we emit it **exactly** (name, unit, instrument).
+Where it has no convention, we keep `agent.*` and never squat on an unratified `gen_ai.*`
+name.
+
+| Signal we emit | Status | Convention name / notes |
+|---|---|---|
+| `gen_ai.client.token.usage` (histogram, `{token}`) | **Ratified — emitted exactly** | with required `gen_ai.token.type` = `input`/`output` |
+| `gen_ai.client.operation.duration` (histogram, `s`) | **Ratified — emitted exactly** | seconds, per convention (was `agent.turn.duration` in ms) |
+| `gen_ai.provider.name`, `gen_ai.operation.name`, `gen_ai.request.model`, `gen_ai.response.model`, `gen_ai.usage.input_tokens`/`output_tokens` | **Ratified attributes** | `gen_ai.provider.name` renamed from the deprecated `gen_ai.system` |
+| `agent.cost_usd`, `agent.cost_estimated`, `agent.cost.unknown_model` | **Tracks open proposal** | no convention yet — [#287](https://github.com/open-telemetry/semantic-conventions-genai/issues/287) (cost) / [#101](https://github.com/open-telemetry/semantic-conventions-genai/issues/101) (metric set). Migrate to the ratified name if/when it lands. |
+| `agent.budget_degraded`, `agent.budget.*`, `agent.prompt_version`, `agent.feature`, `agent.incomplete`, `agent.session_id`, `agent.tool` | **Deliberately custom** | FinOps/attribution units the convention does not model |
+
+**Our cost-unit position (a documented design decision).** We currently emit
+`agent.cost_usd` as a **float USD** counter. On #101's open question of `usd` float vs an
+integer minor-unit (`{microdollar}`), our stated preference is **integer minor-units** for
+the eventual standard, because attributing sub-cent per-call costs across sessions/tools/
+prompt-versions means summing very large counts of tiny values, where float rounding shows
+up in chargeback totals. We emit float today only because that is what our own counter
+predates the standard with; we would migrate to the ratified representation.
 
 ## 4. Attribution model
 
@@ -76,9 +92,9 @@ Every LLM-call span carries:
 Metrics (with **exemplars** linking each datapoint back to a span, so a spike in a
 dashboard is one click from the trace that caused it):
 
-- `agent.tokens` — counter, `direction` label (`input`/`output`)
-- `agent.cost_usd` — counter
-- `agent.turn.duration` — histogram
+- `gen_ai.client.token.usage` — histogram (`{token}`), required `gen_ai.token.type` label (`input`/`output`)
+- `gen_ai.client.operation.duration` — histogram (`s`)
+- `agent.cost_usd` — counter (no convention yet; see the alignment table)
 
 All dimensioned by `gen_ai.response.model`, `agent.feature`, `agent.prompt_version`.
 (Cardinality note: `agent.session_id` is span/exemplar-only, never a metric label.)

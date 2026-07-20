@@ -24,15 +24,15 @@ import java.time.ZoneOffset;
 /**
  * Wraps an {@link LlmClient} to emit OpenTelemetry telemetry per the attribution table
  * (DESIGN.md section 4): a parent turn span with the {@code gen_ai.*}/{@code agent.*}
- * attributes, a child span per HTTP attempt, and the {@code agent.tokens} /
- * {@code agent.cost_usd} / {@code agent.turn.duration} metrics. Cost sums every attempt.
+ * attributes, a child span per HTTP attempt, and the {@code gen_ai.client.token.usage} /
+ * {@code gen_ai.client.operation.duration} (ratified) plus {@code agent.cost_usd} metrics.
+ * Cost sums every attempt.
  *
  * <p>Metrics are recorded inside the parent span's scope, so backends attach exemplars —
  * a spike in a dashboard is one click from the trace that caused it.
  */
 public final class MeteringLlmClient implements LlmClient {
 
-    private static final AttributeKey<String> DIRECTION = AttributeKey.stringKey("direction");
     private static final AttributeKey<Long> HTTP_STATUS = AttributeKey.longKey("http.response.status_code");
 
     private final LlmClient delegate;
@@ -57,7 +57,7 @@ public final class MeteringLlmClient implements LlmClient {
         Span span = tracer.spanBuilder("chat " + request.requestedModel())
                 .setSpanKind(SpanKind.CLIENT).startSpan();
         try (Scope ignored = span.makeCurrent()) {
-            span.setAttribute(MeterAttributes.GEN_AI_SYSTEM, genAiSystem);
+            span.setAttribute(MeterAttributes.GEN_AI_PROVIDER_NAME, genAiSystem);
             span.setAttribute(MeterAttributes.GEN_AI_OPERATION_NAME, "chat");
             span.setAttribute(MeterAttributes.GEN_AI_REQUEST_MODEL, request.requestedModel());
             setIfPresent(span, MeterAttributes.FEATURE, request.feature());
@@ -89,24 +89,24 @@ public final class MeteringLlmClient implements LlmClient {
         span.setAttribute(MeterAttributes.GEN_AI_OUTPUT_TOKENS, total.outputTokens());
 
         Attributes dims = dimensions(request, response);
-        instruments.tokens.add(total.inputTokens(), withDirection(dims, "input"));
-        instruments.tokens.add(total.outputTokens(), withDirection(dims, "output"));
+        instruments.addTokens(total.inputTokens(), "input", dims);
+        instruments.addTokens(total.outputTokens(), "output", dims);
 
         CostResult cost = costEngine.cost(response.responseModel(), total, today());
         if (cost.known()) {
             span.setAttribute(MeterAttributes.COST_USD, cost.usd());
-            instruments.cost.add(cost.usd(), dims);
+            instruments.addCost(cost.usd(), dims);
             if (cost.estimated()) {
                 span.setAttribute(MeterAttributes.COST_ESTIMATED, true);
             }
         } else {
             // Unknown, not zero — a missing cost attribute plus a counter, never a lying 0.00.
-            instruments.unknownModel.add(1, dims);
+            instruments.addUnknownModel(dims);
         }
         if (response.incomplete()) {
             span.setAttribute(MeterAttributes.INCOMPLETE, true);
         }
-        instruments.turnDuration.record(totalDurationMillis(response), dims);
+        instruments.recordDurationSeconds(totalDurationSeconds(response), dims);
     }
 
     private void recordAttemptSpans(LlmResponse response) {
@@ -134,12 +134,8 @@ public final class MeteringLlmClient implements LlmClient {
         return b.build();
     }
 
-    private static Attributes withDirection(Attributes base, String direction) {
-        return base.toBuilder().put(DIRECTION, direction).build();
-    }
-
-    private static long totalDurationMillis(LlmResponse response) {
-        return response.attempts().stream().mapToLong(Attempt::durationMillis).sum();
+    private static double totalDurationSeconds(LlmResponse response) {
+        return response.attempts().stream().mapToLong(Attempt::durationMillis).sum() / 1000.0;
     }
 
     private LocalDate today() {

@@ -57,7 +57,7 @@ class MeteringLlmClientTest {
         client.call(new LlmRequest("m1", "support-chat", "s1", null, "v7"));
 
         SpanData parent = span("chat m1");
-        assertThat(parent.getAttributes().get(MeterAttributes.GEN_AI_SYSTEM)).isEqualTo("anthropic");
+        assertThat(parent.getAttributes().get(MeterAttributes.GEN_AI_PROVIDER_NAME)).isEqualTo("anthropic");
         assertThat(parent.getAttributes().get(MeterAttributes.GEN_AI_REQUEST_MODEL)).isEqualTo("m1");
         assertThat(parent.getAttributes().get(MeterAttributes.GEN_AI_RESPONSE_MODEL)).isEqualTo("m1");
         assertThat(parent.getAttributes().get(MeterAttributes.FEATURE)).isEqualTo("support-chat");
@@ -148,13 +148,14 @@ class MeteringLlmClientTest {
                 .mapToDouble(DoublePointData::getValue).sum();
     }
 
-    private long tokenMetric(String direction) {
-        AttributeKey<String> dir = AttributeKey.stringKey("direction");
-        return metrics.collectAllMetrics().stream()
-                .filter(m -> m.getName().equals("agent.tokens"))
-                .flatMap(m -> m.getLongSumData().getPoints().stream())
-                .filter(p -> direction.equals(p.getAttributes().get(dir)))
-                .mapToLong(LongPointData::getValue).sum();
+    private long tokenMetric(String tokenType) {
+        // gen_ai.client.token.usage is a histogram; its per-type sum is the token total.
+        AttributeKey<String> type = MeterAttributes.GEN_AI_TOKEN_TYPE;
+        return (long) metrics.collectAllMetrics().stream()
+                .filter(m -> m.getName().equals("gen_ai.client.token.usage"))
+                .flatMap(m -> m.getHistogramData().getPoints().stream())
+                .filter(p -> tokenType.equals(p.getAttributes().get(type)))
+                .mapToDouble(io.opentelemetry.sdk.metrics.data.HistogramPointData::getSum).sum();
     }
 
     private long metricSum(String name) {

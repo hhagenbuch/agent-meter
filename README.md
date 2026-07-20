@@ -70,6 +70,24 @@ flowchart LR
   a degraded model is what the span records). A degraded scope recovers on its own
   when the window rolls over.
 
+## Standards alignment
+
+Ratified OpenTelemetry GenAI signals are emitted **exactly** (name, unit, instrument);
+gaps keep the `agent.*` namespace — we never squat on an unratified `gen_ai.*` name.
+Audited against `open-telemetry/semantic-conventions-genai` @ `c26a2c21` (2026-07-17).
+
+| Signal | Status |
+|---|---|
+| `gen_ai.client.token.usage` (histogram, `{token}`, `gen_ai.token.type`) | **Ratified — emitted exactly** |
+| `gen_ai.client.operation.duration` (histogram, `s`) | **Ratified — emitted exactly** |
+| `gen_ai.provider.name` / `operation.name` / `request.model` / `response.model` / `usage.*_tokens` | **Ratified attributes** (`provider.name` renamed from deprecated `gen_ai.system`) |
+| `agent.cost_usd` / `agent.cost_estimated` / `agent.cost.unknown_model` | **Tracks open proposals** [#287](https://github.com/open-telemetry/semantic-conventions-genai/issues/287) / [#101](https://github.com/open-telemetry/semantic-conventions-genai/issues/101) — migrate when ratified |
+| `agent.budget_*` / `agent.prompt_version` / `agent.feature` / `agent.incomplete` / `agent.session_id` / `agent.tool` | **Deliberately custom** (no convention) |
+
+On #101's open `usd`-float-vs-`{microdollar}`-integer question, our position is integer
+minor-units (float loses money summing sub-cent costs at fleet scale); we emit float today
+only because our counter predates the standard. Full detail: [`docs/DESIGN.md`](docs/DESIGN.md#3-semantic-convention-adherence).
+
 ## Modules
 
 | Module | Contents | Deps |

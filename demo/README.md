@@ -53,9 +53,11 @@ Tempo trace that caused it (click a point → *Query with Tempo*).
 Metric names follow the OTel → Prometheus normalization the collector applies (dots →
 underscores, counters get `_total`, and some builds append unit suffixes). If a panel is
 empty, open Grafana's metric browser (or `http://localhost:9090` → the metric explorer)
-and confirm the exact name — e.g. `agent_cost_usd_total`, `agent_tokens_total`,
-`agent_budget_enforced_total` — and adjust the panel query. The `demo-app`'s telemetry is
-real agent-meter output, so whatever names your collector emits are what the panels need.
+and confirm the exact name — e.g. `agent_cost_usd_total`, the ratified
+`gen_ai_client_token_usage_sum` (a histogram; `_sum` is total tokens),
+`gen_ai_client_operation_duration_seconds_bucket`, `agent_budget_enforced_total` — and
+adjust the panel query. The `demo-app`'s telemetry is real agent-meter output, so whatever
+names your collector emits are what the panels need.
 
 ## The hero screenshot
 

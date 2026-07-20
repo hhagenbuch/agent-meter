@@ -71,7 +71,7 @@ class StarterMeteringLlmClientTest {
 
         SpanData span = spans.getFinishedSpanItems().stream()
                 .filter(s -> s.getName().equals("chat m1")).findFirst().orElseThrow();
-        assertThat(span.getAttributes().get(MeterAttributes.GEN_AI_SYSTEM)).isEqualTo("anthropic");
+        assertThat(span.getAttributes().get(MeterAttributes.GEN_AI_PROVIDER_NAME)).isEqualTo("anthropic");
         assertThat(span.getAttributes().get(MeterAttributes.GEN_AI_REQUEST_MODEL)).isEqualTo("m1");
         assertThat(span.getAttributes().get(MeterAttributes.GEN_AI_RESPONSE_MODEL)).isEqualTo("m1");
         assertThat(span.getAttributes().get(MeterAttributes.SESSION_ID)).isEqualTo("s1");          // from context

@@ -94,7 +94,7 @@ public class StarterMeteringLlmClient implements LlmClient {
             // (degrade cannot swap the model here — see class doc / DESIGN §7)
 
             Span span = tracer.spanBuilder("chat " + model).setSpanKind(SpanKind.CLIENT).startSpan();
-            span.setAttribute(MeterAttributes.GEN_AI_SYSTEM, genAiSystem);
+            span.setAttribute(MeterAttributes.GEN_AI_PROVIDER_NAME, genAiSystem);
             span.setAttribute(MeterAttributes.GEN_AI_OPERATION_NAME, "chat");
             span.setAttribute(MeterAttributes.GEN_AI_REQUEST_MODEL, model);
             setIfPresent(span, MeterAttributes.SESSION_ID, sessionId);
@@ -139,7 +139,7 @@ public class StarterMeteringLlmClient implements LlmClient {
         } else {
             instruments.addUnknownModel(dims);
         }
-        instruments.recordDuration((System.nanoTime() - startNanos) / 1_000_000.0, dims);
+        instruments.recordDurationSeconds((System.nanoTime() - startNanos) / 1_000_000_000.0, dims);
     }
 
     /** Map the starter's usage to the cost engine's: cache-read bills at the cached rate;

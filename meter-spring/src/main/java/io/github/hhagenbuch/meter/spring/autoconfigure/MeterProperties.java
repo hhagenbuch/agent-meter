@@ -21,7 +21,8 @@ public class MeterProperties {
     /** A table older than this many days flags cost as estimated. */
     private int staleDays = CostEngine.DEFAULT_STALE_DAYS;
 
-    /** {@code gen_ai.system} value for spans (e.g. anthropic, openai). */
+    /** {@code gen_ai.provider.name} value for spans (e.g. anthropic, openai). The config
+     *  key stays {@code gen-ai-system} for compatibility; only the emitted attribute is renamed. */
     private String genAiSystem = "anthropic";
 
     /** {@code agent.prompt_version} for spans/metrics; typically {@code ${AGENT_PROMPT_VERSION:}}
