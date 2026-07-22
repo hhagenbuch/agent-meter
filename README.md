@@ -83,6 +83,7 @@ Audited against `open-telemetry/semantic-conventions-genai` @ `c26a2c21` (2026-0
 | `gen_ai.provider.name` / `operation.name` / `request.model` / `response.model` / `usage.*_tokens` | **Ratified attributes** (`provider.name` renamed from deprecated `gen_ai.system`) |
 | `agent.cost_usd` / `agent.cost_estimated` / `agent.cost.unknown_model` | **Tracks open proposals** [#287](https://github.com/open-telemetry/semantic-conventions-genai/issues/287) / [#101](https://github.com/open-telemetry/semantic-conventions-genai/issues/101) — migrate when ratified |
 | `agent.budget_*` / `agent.prompt_version` / `agent.feature` / `agent.incomplete` / `agent.session_id` / `agent.tool` | **Deliberately custom** (no convention) |
+| `agent.sli.eval_cases` (counter, `{case}`, `agent.sli.result`) / `agent.sli.eval_pass_rate` (histogram, `1`) | **Deliberately custom** — behavioral-SLI instruments for [agent-slo](https://github.com/hhagenbuch/agent-slo) |
 
 On #101's open `usd`-float-vs-`{microdollar}`-integer question, our position is integer
 minor-units (float loses money summing sub-cent costs at fleet scale); we emit float today

@@ -39,4 +39,10 @@ public final class MeterAttributes {
     public static final AttributeKey<Boolean> COST_ESTIMATED = AttributeKey.booleanKey("agent.cost_estimated");
     public static final AttributeKey<Boolean> BUDGET_DEGRADED = AttributeKey.booleanKey("agent.budget_degraded");
     public static final AttributeKey<Boolean> INCOMPLETE = AttributeKey.booleanKey("agent.incomplete");
+
+    // --- behavioral-SLI attribution (agent-slo RFC) ---
+    /** {@code pass} / {@code fail} on the {@code agent.sli.eval_cases} counter. */
+    public static final AttributeKey<String> SLI_RESULT = AttributeKey.stringKey("agent.sli.result");
+    /** Dataset name a continuous-eval run executed. */
+    public static final AttributeKey<String> SLI_DATASET = AttributeKey.stringKey("agent.sli.dataset");
 }
